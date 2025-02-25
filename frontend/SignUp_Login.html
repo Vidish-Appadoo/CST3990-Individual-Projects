@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Login</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: monospace;
+            padding: 20px;
+        }
+        .green { color: limegreen; }
+        .red { color: red; }
+        .input-line {
+            display: flex;
+        }
+        input {
+            background: black;
+            border: none;
+            color: white;
+            font-family: monospace;
+            outline: none;
+        }
+        input[type="password"] {
+            letter-spacing: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <template v-if="!accountConfirmed">
+            <p>
+                You have now accessed the agency’s Platform. Do you have an Account? [Y/N]: <span>{{ accountResponse }}</span>
+                <input v-model="accountInput" @keydown.enter="confirmAccount" autofocus>
+                <p v-if="accountError" class="red">Invalid input. Please enter Y or N.</p>
+            </p>
+        </template>
+
+        <template v-if="showLogin">
+            <p>Please enter your Username and Password</p>
+            <span></span>
+            <div class="input-line"><span class="green">Username:</span> <input v-model="username" type="text" ref="usernameInput" @keydown.enter="focusPassword"></div>
+            <div class="input-line"><span class="green">Password:</span> <input v-model="password" type="password" ref="passwordInput" @keydown.enter="authenticateUser"></div>
+            <p v-if="errorMessage" class="red">{{ errorMessage }}</p>
+            <p v-if="welcomeMessage">{{ welcomeMessage }}</p>
+        </template>
+
+        <template v-if="showSignUp">
+            <p>Join the agency’s force. Please enter the Form Below:</p>
+            <span></span>
+            <div class="input-line"><span class="green">Username:</span> <input v-model="signupUsername" type="text" ref="usernameSignupInput" @keydown.enter="focusEmail"></div>
+            <div class="input-line"><span class="green">Email:</span> <input v-model="signupEmail" type="text" ref="emailSignupInput" @keydown.enter="focusPasswordSignup"></div>
+            <div class="input-line"><span class="green">Password:</span> <input v-model="signupPassword" type="password" ref="passwordSignupInput" @keydown.enter="focusConfirmPassword"></div>
+            <div class="input-line"><span class="green">Confirm Password:</span> <input v-model="signupConfirmPassword" type="password" ref="confirmPasswordSignupInput" @keydown.enter="signUpUser"></div>
+            <p v-if="signupErrorMessage" class="red">{{ signupErrorMessage }}</p>
+            <p v-if="signupSuccessMessage" class="green">{{ signupSuccessMessage }}</p>
+        </template>
+
+        <template v-if="welcomeMessage || signupSuccessMessage">
+            <div class="dashboard">
+                <h2 class="green">MISSION DASHBOARD</h2>
+                <div class="dashboard-section">
+                    
+                </div>
+            </div>
+        </template>
+        
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    accountInput: '',
+                    accountResponse: '',
+                    accountConfirmed: false,
+                    showLogin: false,
+                    showSignUp: false,
+                    username: '',
+                    password: '',
+                    errorMessage: '',
+                    welcomeMessage: '',
+                    accountError: false,
+                    signupUsername: '',
+                    signupEmail: '',
+                    signupPassword: '',
+                    signupConfirmPassword: '',
+                    signupErrorMessage: '',
+                    signupSuccessMessage: ''
+                };
+            },
+            methods: {
+                confirmAccount() {
+                    let response = this.accountInput.trim().toUpperCase();
+                    if (response === 'Y') {
+                        this.accountResponse = response;
+                        this.accountConfirmed = true;
+                        this.showLogin = true;
+                        this.$nextTick(() => this.$refs.usernameInput.focus());
+                    } else if (response === 'N') {
+                        this.accountResponse = response;
+                        this.accountConfirmed = true;
+                        this.showSignUp = true;
+                        this.$nextTick(() => this.$refs.usernameSignupInput.focus());
+                    } else {
+                        this.accountInput = '';
+                        this.accountError = true;
+                    }
+                },
+                focusPassword() {
+                    this.$nextTick(() => this.$refs.passwordInput.focus());
+                },
+                focusEmail() {
+                    this.$nextTick(() => this.$refs.emailSignupInput.focus());
+                },
+                focusPasswordSignup() {
+                    this.$nextTick(() => this.$refs.passwordSignupInput.focus());
+                },
+                focusConfirmPassword() {
+                    this.$nextTick(() => this.$refs.confirmPasswordSignupInput.focus());
+                },
+                authenticateUser() {
+                    fetch("/api/login", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username: this.username, password: this.password })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.welcomeMessage = `Welcome Agent [${this.username}]`;
+                            this.errorMessage = '';
+                        } else {
+                            this.errorMessage = "Incorrect Username or Password. Please Try Again.";
+                            this.welcomeMessage = '';
+                        }
+                    })
+                    .catch(error => console.error("Error:", error));
+                },
+                signUpUser() {
+                    if (this.signupPassword !== this.signupConfirmPassword) {
+                        this.signupErrorMessage = "Passwords do not match!";
+                        return;
+                    }
+                    if (!this.signupUsername || !this.signupEmail || !this.signupPassword) {
+                        this.signupErrorMessage = "All fields are required!";
+                        return;
+                    }
+
+                    // Validate email format
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(this.signupEmail)) {
+                        this.signupErrorMessage = "Invalid email format!";
+                        return;
+                    }
+
+                    // Check password match
+                    if (this.signupPassword !== this.signupConfirmPassword) {
+                        this.signupErrorMessage = "Passwords do not match!";
+                        return;
+                    }
+
+                    // Validate password complexity
+                    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+                    if (!passwordRegex.test(this.signupPassword)) {
+                        this.signupErrorMessage = "Password must contain:";
+                        this.signupErrorMessage += "\n- At least 8 characters";
+                        this.signupErrorMessage += "\n- At least 1 uppercase letter";
+                        this.signupErrorMessage += "\n- At least 1 lowercase letter";
+                        this.signupErrorMessage += "\n- At least 1 number";
+                        return;
+                    }
+
+                    fetch("/api/signup", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            username: this.signupUsername,
+                            email: this.signupEmail,
+                            password: this.signupPassword
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.signupSuccessMessage = "Registration successful. You can now login.";
+                            this.signupErrorMessage = '';
+                            this.showSignUp = false;
+                            this.showLogin = true;
+                        } else {
+                            this.signupErrorMessage = data.message || "Registration failed!";
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        this.signupErrorMessage = "An error occurred during registration!";
+                    });
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
