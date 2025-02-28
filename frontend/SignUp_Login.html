@@ -61,6 +61,8 @@
 
         <template v-if="welcomeMessage || signupSuccessMessage">
             <div class="dashboard">
+                <p>{{signupSuccessMessage}}</p>
+                <p>{{welcomeMessage}}</p>
                 <h2 class="green">MISSION DASHBOARD</h2>
                 <div class="dashboard-section">
                     
@@ -125,7 +127,7 @@
                     this.$nextTick(() => this.$refs.confirmPasswordSignupInput.focus());
                 },
                 authenticateUser() {
-                    fetch("/api/login", {
+                    fetch("http://localhost:3000/api/login", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ username: this.username, password: this.password })
@@ -133,6 +135,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
+                            this.showLogin = false
                             this.welcomeMessage = `Welcome Agent [${this.username}]`;
                             this.errorMessage = '';
                         } else {
@@ -176,7 +179,7 @@
                         return;
                     }
 
-                    fetch("/api/signup", {
+                    fetch("http://localhost:3000/api/signup", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
@@ -188,10 +191,9 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            this.signupSuccessMessage = "Registration successful. You can now login.";
+                            this.signupSuccessMessage = `Welcome to the Agency [${this.signupUsername}]`;
                             this.signupErrorMessage = '';
                             this.showSignUp = false;
-                            this.showLogin = true;
                         } else {
                             this.signupErrorMessage = data.message || "Registration failed!";
                         }

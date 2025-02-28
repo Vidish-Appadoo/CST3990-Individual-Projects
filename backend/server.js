@@ -8,7 +8,11 @@ const cors = require('cors');
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+
+app.use(cors({
+    origin: 'http://127.0.0.1:5500', // Replace with your frontend URL
+    credentials: true
+}));
 
 // MongoDB Connection
 const client = new MongoClient(process.env.MONGODB_URI);
@@ -57,7 +61,8 @@ app.post('/api/signup', async (req, res) => {
             username,
             email,
             password: hashedPassword,
-            createdAt: new Date()
+            createdAt: new Date(),
+            missionCompleted: []
         });
 
         res.status(201).json({
