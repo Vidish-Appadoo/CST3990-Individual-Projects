@@ -77,16 +77,6 @@
           <p v-if="signupSuccessMessage" class="green">{{ signupSuccessMessage }}</p>
       </template>
 
-      <template v-if="welcomeMessage || signupSuccessMessage">
-          <div class="dashboard">
-              <p>{{ signupSuccessMessage }}</p>
-              <p>{{ welcomeMessage }}</p>
-              <h2 class="green">MISSION DASHBOARD</h2>
-              <div class="dashboard-section">
-                  <!-- Dashboard Content Here -->
-              </div>
-          </div>
-      </template>
   </div>
 
   <script>
