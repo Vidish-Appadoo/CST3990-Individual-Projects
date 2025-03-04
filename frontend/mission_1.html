@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mission 1: Cipher Decryption</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: monospace;
+      padding: 20px;
+    }
+    .green { color: limegreen; }
+    .red { color: red; }
+    .input-line {
+      display: flex;
+      margin: 10px 0;
+    }
+    input {
+      background: black;
+      border: none;
+      color: white;
+      font-family: monospace;
+      outline: none;
+      margin-left: 10px;
+    }
+    .tutorial {
+      border: 1px solid limegreen;
+      padding: 15px;
+      margin: 20px 0;
+    }
+    .cipher-box {
+      border: 1px solid #2ecc71;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    .lore {
+      font-style: italic;
+      color: #cccccc;
+      margin-bottom: 15px;
+    }
+    button {
+      background: #002200;
+      color: limegreen;
+      border: 1px solid limegreen;
+      padding: 5px 10px;
+      margin: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="mission-container">
+      <h2 class="green">OPERATION: CIPHER BREAKER</h2>
+      
+      <!-- Lore Section -->
+      <div class="lore">
+        <p>Agent, your mission begins now. Our intelligence has intercepted a cryptic message from CipherX—a notorious adversary whose hidden plans threaten global security.</p>
+        <p>Your expertise in decryption is vital. Each cipher you crack brings us closer to neutralizing this threat. Trust your instincts, and remember: sometimes, a simple shift can reveal hidden truths.</p>
+      </div>
+      
+      <!-- Cipher Box with dynamic encrypted message -->
+      <div class="cipher-box">
+        <h2 class="green">🔒 ENCRYPTED MESSAGE:</h2>
+        <p>{{ encryptedMessage }}</p>
+      </div>
+
+      <div class="input-line">
+        <span class="green">Decrypted Message:</span>
+        <input v-model="userAnswer" @keydown.enter="checkAnswer" size="50" placeholder="Enter decrypted text here...">
+      </div>
+
+      <div>
+        <button @click="showHint = !showHint">Hint</button>
+        <button @click="showTutorial = !showTutorial">Agency's Manual</button>
+      </div>
+
+      <p v-if="showHint" class="green">HINT: Sometimes, a simple shift can reveal hidden truths.</p>
+      <p v-if="feedback" :class="feedbackClass">{{ feedback }}</p>
+
+      <!-- Return to Dashboard button appears if answer is correct -->
+      <button v-if="feedback" @click="returnDashboard">Return to Dashboard</button>
+      <button v-if="feedback === '✓ Success! Message decrypted!'" @click="reload">Try another itiration</button>
+     
+      <div v-if="showTutorial" class="tutorial">
+        <h3 class="green">📖 CIPHER TUTORIAL</h3>
+        <p>The Caesar cipher is one of the earliest known encryption systems.</p>
+        <p>How it works:</p>
+        <ol>
+          <li>Each letter in the plaintext is shifted by a fixed number.</li>
+          <li>The shift value acts as the key for both encryption and decryption.</li>
+          <li>For example, with a shift of +3: A → D, B → E, X → A.</li>
+        </ol>
+        <p>Your task: Determine the shift value used and reverse it to decrypt the message.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          userAnswer: '',
+          // List of plaintext messages that make sense in context
+          plaintextMessages: [
+            "We plans a covert attack",
+            // "Intel suggests to mobilize forces",
+            // "Suspicious communications detected",
+            // "Operations commence soon",
+            // "The package is en route",
+            // "Awaiting final authorization for deployment",
+            // "Surveillance breach detected, proceed with caution",
+            // "All units stand by for further orders",
+            // "Mission parameters updated, execute as planned",
+            // "Secure channels compromised, switching to backup",
+            // "Intercepted message confirms target coordinates",
+            // "High-value asset relocation in progress",
+            // "Operation window closing, act immediately",
+            // "Decoding new intelligence for strategic execution",
+            // "Encryption keys rotated, ensure updated access",
+            // "Finalizing contingency protocols for extraction",
+            // "Tactical units report readiness status",
+            // "Satellite feed indicates movement near objective",
+            // "Critical resources secured, proceeding as planned",
+            // "Deployment schedule accelerated, adjust accordingly"
+          ],
+          plaintextMessage: '',
+          shift: 0,
+          encryptedMessage: '',
+          correctAnswer: '',
+          feedback: '',
+          feedbackClass: '',
+          showHint: false,
+          showTutorial: false
+        };
+      },
+      methods: {
+        // Generate a new cipher each time the mission loads
+        generateCipher() {
+          const messages = this.plaintextMessages;
+          const randomIndex = Math.floor(Math.random() * messages.length);
+          this.plaintextMessage = messages[randomIndex];
+          // Generate random shift (between 1 and 25)
+          this.shift = Math.floor(Math.random() * 25) + 1;
+          this.encryptedMessage = this.caesarEncrypt(this.plaintextMessage, this.shift);
+          this.correctAnswer = this.plaintextMessage.toLowerCase();
+        },
+        // Caesar cipher encryption function
+        caesarEncrypt(text, shift) {
+          let result = '';
+          for (let i = 0; i < text.length; i++) {
+            let c = text[i];
+            if (c >= 'a' && c <= 'z') {
+              let code = text.charCodeAt(i);
+              let newCode = ((code - 97 + shift) % 26) + 97;
+              result += String.fromCharCode(newCode);
+            } else if (c >= 'A' && c <= 'Z') {
+              let code = text.charCodeAt(i);
+              let newCode = ((code - 65 + shift) % 26) + 65;
+              result += String.fromCharCode(newCode);
+            } else {
+              result += c;
+            }
+          }
+          return result.toUpperCase();
+        },
+        checkAnswer() {
+          if (this.userAnswer.trim().toLowerCase() === this.correctAnswer) {
+            this.feedback = "✓ Success! Message decrypted!";
+            this.feedbackClass = "green";
+          } else {
+            this.feedback = "✗ Incorrect! Keep trying!";
+            this.feedbackClass = "red";
+          }
+        },
+        returnDashboard() {
+          // Redirect to the main dashboard HTML page
+          window.location.href = "dashboard.html";
+        },
+        reload() {
+          // Reset state for a new mission iteration
+          this.userAnswer = '';
+          this.feedback = '';
+          this.feedbackClass = '';
+          this.showHint = false;
+          this.showTutorial = false;
+          this.generateCipher();
+        }
+      },
+      mounted() {
+        this.generateCipher();
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

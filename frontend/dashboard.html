@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Agency</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: monospace;
+      padding: 20px;
+    }
+    .green { color: limegreen; }
+    .mission {
+      padding: 5px 10px;
+    }
+    .selected {
+      background-color: limegreen;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1 class="green">MISSION DASHBOARD</h1>
+    <p>Welcome, Agent <span>{{ agentName }}</span>!</p>
+
+    <div>
+      <p v-for="(mission, index) in missions" 
+         :class="{ 'selected': selectedMission === index }" 
+         class="mission">
+        >> {{ mission.name }}
+      </p>
+    </div>
+
+    <p class="green">Use ↑ and ↓ to navigate. Press Enter to start.</p>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          agentName: "",
+          missions: [
+            { name: "mission 1 _ Cipher Break", url: "mission_1.html" },
+            { name: "mission 2 _ XOR", url: "mission_2.html" }
+          ],
+          selectedMission: 0
+        };
+      },
+      methods: {
+        navigate(event) {
+          if (event.key === "ArrowUp") {
+            this.selectedMission = (this.selectedMission - 1 + this.missions.length) % this.missions.length;
+          } else if (event.key === "ArrowDown") {
+            this.selectedMission = (this.selectedMission + 1) % this.missions.length;
+          } else if (event.key === "Enter") {
+            window.location.href = this.missions[this.selectedMission].url + "?agent=" + encodeURIComponent(this.agentName);
+          }
+        },
+        getAgentName() {
+          let name = new URLSearchParams(window.location.search).get("agent") || sessionStorage.getItem("agentName");
+          if (name) {
+            this.agentName = name;
+            sessionStorage.setItem("agentName", name);
+          }
+        }
+      },
+      mounted() {
+        this.getAgentName();
+        window.addEventListener("keydown", this.navigate);
+      },
+      beforeUnmount() {
+        window.removeEventListener("keydown", this.navigate);
+      }
+    }).mount("#app");
+  </script>
+</body>
+</html>
