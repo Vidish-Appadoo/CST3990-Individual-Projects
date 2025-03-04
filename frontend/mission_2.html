@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission 2: XOR Encryption</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: monospace;
+            padding: 20px;
+        }
+        .green { color: limegreen; }
+        .red { color: red; }
+        .input-line {
+            display: flex;
+            margin: 10px 0;
+        }
+        input {
+            background: black;
+            border: none;
+            color: white;
+            font-family: monospace;
+            outline: none;
+            margin-left: 10px;
+        }
+        .converter-box, .cipher-box {
+            border: 1px solid limegreen;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        button {
+            background: #002200;
+            color: limegreen;
+            border: 1px solid limegreen;
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .binary-output {
+            letter-spacing: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="mission-container">
+            <h2 class="green">OPERATION: BINARY GHOST</h2>
+            
+            <div class="cipher-box">
+                <h4 class="green">🔓 PLAINTEXT CODE:</h4>
+                <p>{{ plainTextCode }}</p>
+                <h4 class="green">🔑 XOR KEY:</h4>
+                <p>X</p>
+            </div>
+
+            <div class="input-line">
+                <span class="green">Ciphertext (Binary):</span>
+                <input v-model="userBinary" @keydown.enter="validateAnswer" placeholder="Enter encrypted binary..." style="width: 300px;">
+            </div>
+
+            <div>
+                <button @click="showConverter = !showConverter">Toggle Converter</button>
+                <button @click="showTutorial = !showTutorial">XOR Tutorial</button>
+                <button @click="validateAnswer">Submit</button>
+            </div>
+
+            <p v-if="feedback" :class="feedbackClass">{{ feedback }}</p>
+            <button v-if="feedback" @click="returnDashboard">Return to Dashboard</button>
+            <button v-if="feedback === '✓ Success! Message decrypted!'" @click="reload">Try another itiration</button>
+
+            <div v-if="showConverter" class="converter-box">
+                <h3 class="green">🛠️ ASCII CONVERTER</h3>
+                <div class="input-line">
+                    <span class="green">Character:</span>
+                    <input v-model="converterChar" maxlength="1" style="width: 50px;">
+                    <span class="green" style="margin-left: 20px;">ASCII Decimal:</span>
+                    <input :value="charToAscii" readonly style="width: 50px;">
+                    <span class="green" style="margin-left: 20px;">Binary:</span>
+                    <input :value="asciiToBinary" readonly class="binary-output" style="width: 100px;">
+                </div>
+                <p class="green">Example: A → 65 → 01000001</p>
+            </div>
+
+            <div v-if="showTutorial" class="converter-box">
+                <h3 class="green">📖 XOR CIPHER TUTORIAL</h3>
+                <p>XOR (Exclusive OR) encryption works using bitwise operations:</p>
+                <ol>
+                    <li>Convert each character in the 4-character code to ASCII.</li>
+                    <li>Convert ASCII to an 8-bit binary.</li>
+                    <li>Perform **XOR** with the encryption key `"X"` (ASCII 88 → 01011000).</li>
+                    <li>Enter the final binary result.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    plainTextCode: "",
+                    xorKey: 88, // ASCII value of "X"
+                    userBinary: "",
+                    correctBinary: "",
+                    feedback: "",
+                    feedbackClass: "",
+                    showConverter: false,
+                    showTutorial: false,
+                    converterChar: ""
+                };
+            },
+            computed: {
+                charToAscii() {
+                    return this.converterChar ? this.converterChar.charCodeAt(0) : "";
+                },
+                asciiToBinary() {
+                    if (!this.converterChar) return "";
+                    return this.converterChar.charCodeAt(0).toString(2).padStart(8, "0");
+                }
+            },
+            methods: {
+                generateCode() {
+                    this.plainTextCode = this.getRandomAlphanumeric(4); // Generate a random 4-character code
+                    this.correctBinary = this.xorEncrypt(this.plainTextCode, this.xorKey); // Encrypt it using XOR
+                },
+                getRandomAlphanumeric(length) {
+                    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+                    let result = "";
+                    for (let i = 0; i < length; i++) {
+                        result += chars.charAt(Math.floor(Math.random() * chars.length));
+                    }
+                    return result;
+                },
+                xorEncrypt(code, key) {
+                    return [...code].map(char => 
+                        (char.charCodeAt(0) ^ key).toString(2).padStart(8, "0")).join('');
+                },
+                validateAnswer() {
+                    console.log(this.correctBinary)
+                    const cleanInput = this.userBinary.replace(/ /g, '');
+                    if (cleanInput === this.correctBinary) {
+                        this.feedback = "✓ SUCCESS! Transmission encrypted!";
+                        this.feedbackClass = "green";
+                    } else {
+                        this.feedback = "✗ ERROR! Invalid ciphertext!";
+                        this.feedbackClass = "red";
+                    }
+                },
+                returnDashboard() {
+                    window.location.href = "dashboard.html";
+                }
+            },
+            mounted() {
+                this.generateCode();
+            }
+        }).mount("#app");
+    </script>
+</body>
+</html>

@@ -74,6 +74,7 @@
       </div>
 
       <div>
+        <button @click="checkAnswer">Submit</button> <!-- Submit button added -->
         <button @click="showHint = !showHint">Hint</button>
         <button @click="showTutorial = !showTutorial">Agency's Manual</button>
       </div>
@@ -83,7 +84,7 @@
 
       <!-- Return to Dashboard button appears if answer is correct -->
       <button v-if="feedback" @click="returnDashboard">Return to Dashboard</button>
-      <button v-if="feedback === '✓ Success! Message decrypted!'" @click="reload">Try another itiration</button>
+      <button v-if="feedback === '✓ Success! Message decrypted!'" @click="reload">Try another iteration</button>
      
       <div v-if="showTutorial" class="tutorial">
         <h3 class="green">📖 CIPHER TUTORIAL</h3>
@@ -106,7 +107,6 @@
       data() {
         return {
           userAnswer: '',
-          // List of plaintext messages that make sense in context
           plaintextMessages: [
             "We plans a covert attack",
             "Intel suggests to mobilize forces",
@@ -145,8 +145,7 @@
           const messages = this.plaintextMessages;
           const randomIndex = Math.floor(Math.random() * messages.length);
           this.plaintextMessage = messages[randomIndex];
-          // Generate random shift (between 1 and 25)
-          this.shift = Math.floor(Math.random() * 25) + 1;
+          this.shift = Math.floor(Math.random() * 25) + 1; // Generate random shift (1-25)
           this.encryptedMessage = this.caesarEncrypt(this.plaintextMessage, this.shift);
           this.correctAnswer = this.plaintextMessage.toLowerCase();
         },
@@ -179,11 +178,9 @@
           }
         },
         returnDashboard() {
-          // Redirect to the main dashboard HTML page
           window.location.href = "dashboard.html";
         },
         reload() {
-          // Reset state for a new mission iteration
           this.userAnswer = '';
           this.feedback = '';
           this.feedbackClass = '';
