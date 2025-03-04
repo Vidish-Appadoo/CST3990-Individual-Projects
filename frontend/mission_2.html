@@ -39,6 +39,12 @@
             margin: 5px;
             cursor: pointer;
         }
+        .lore {
+            font-style: italic;
+            color: #cccccc;
+            margin-bottom: 15px;
+        }
+
         .binary-output {
             letter-spacing: 3px;
         }
@@ -48,11 +54,17 @@
     <div id="app">
         <div class="mission-container">
             <h2 class="green">OPERATION: BINARY GHOST</h2>
+
+            <div class="lore">
+                <p>Agent, a secure transmission has been intercepted, containing a critical 4-digit access code.</p>
+                <p>Your task: Encrypt this code using **XOR encryption** before sending it securely.</p>
+                <p>Use the ASCII converter to assist with binary conversion.</p>
+              </div>
             
             <div class="cipher-box">
-                <h4 class="green">🔓 PLAINTEXT CODE:</h4>
+                <h4 class="green">PLAINTEXT CODE:</h4>
                 <p>{{ plainTextCode }}</p>
-                <h4 class="green">🔑 XOR KEY:</h4>
+                <h4 class="green">XOR KEY:</h4>
                 <p>X</p>
             </div>
 

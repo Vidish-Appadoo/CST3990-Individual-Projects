@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mission 3: Integrity Check</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: monospace;
+      padding: 20px;
+    }
+    .green { color: limegreen; }
+    .red { color: red; }
+    .input-line {
+      display: flex;
+      margin: 10px 0;
+    }
+    input {
+      background: black;
+      border: none;
+      color: white;
+      font-family: monospace;
+      outline: none;
+      margin-left: 10px;
+    }
+    .cipher-box, .tutorial, .converter-box {
+      border: 1px solid limegreen;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    .lore {
+      font-style: italic;
+      color: #cccccc;
+      margin-bottom: 15px;
+    }
+    button {
+      background: #002200;
+      color: limegreen;
+      border: 1px solid limegreen;
+      padding: 5px 10px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    .binary-output {
+      letter-spacing: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="mission-container">
+      <h2 class="green">OPERATION: INTEGRITY CHECK</h2>
+      
+      <!-- Lore Section -->
+      <div class="lore">
+        <p>Agent, our intel indicates that the secure message intercepted may have been tampered with.</p>
+        <p>Your mission is to verify its integrity by computing its hash using our simplified algorithm.</p>
+        <p>The hash is computed by summing the ASCII values of every character (including spaces) in the message, taking the sum modulo 65,536, and converting the result into a 4-digit hexadecimal string.</p>
+        <p>If you compute the correct hash and it differs from the intercepted hash, you'll know the message's integrity is compromised.</p>
+      </div>
+      
+      <!-- Message and Hash Display -->
+      <div class="cipher-box">
+        <h3 class="green">INTERCEPTED MESSAGE:</h3>
+        <p>{{ plainTextMessage }}</p>
+        <h3 class="green">INTERCEPTED HASH:</h3>
+        <p>{{ interceptedHash }}</p>
+      </div>
+
+      <!-- Input for computed hash -->
+      <div class="input-line">
+        <span class="green">Computed Hash (Hex):</span>
+        <input v-model="userHash" placeholder="Enter hash (e.g., AB12)..." size="10">
+      </div>
+
+      <div>
+        <button @click="validateAnswer">Submit</button>
+        <button @click="showConverter = !showConverter">Toggle ASCII Converter</button>
+        <button @click="showIntHexConverter = !showIntHexConverter">Toggle Integer to Hex Converter</button>
+        <button @click="showModuloCalculator = !showModuloCalculator">Toggle Modulo Calculator</button>
+        <button @click="showTutorial = !showTutorial">Toggle Tutorial</button>
+      </div>
+
+      <p v-if="feedback" :class="feedbackClass">{{ feedback }}</p>
+
+      <!-- Navigation Buttons -->
+      <button v-if="feedback" @click="returnDashboard">Return to Dashboard</button>
+      <button v-if="feedback && feedback.startsWith('✓ Success!')" @click="reload">Try another iteration</button>
+     
+      <!-- ASCII Converter -->
+      <div v-if="showConverter" class="converter-box">
+        <h3 class="green">🛠️ ASCII CONVERTER</h3>
+        <div class="input-line">
+          <span class="green">Character:</span>
+          <input v-model="converterChar" maxlength="1" style="width: 50px;">
+          <span class="green" style="margin-left: 20px;">ASCII Decimal:</span>
+          <input :value="charToAscii" readonly style="width: 50px;">
+        </div>
+        <p class="green">Example: A → 65, Space → 32</p>
+      </div>
+
+      <!-- Integer to Hex Converter -->
+      <div v-if="showIntHexConverter" class="converter-box">
+        <h3 class="green">🛠️ INTEGER TO HEX CONVERTER</h3>
+        <div class="input-line">
+          <span class="green">Integer:</span>
+          <input v-model="intInput" type="number" placeholder="Enter integer" style="width: 100px;">
+          <span class="green" style="margin-left: 20px;">Hex:</span>
+          <input :value="intToHex" readonly style="width: 100px;">
+        </div>
+        <p class="green">Example: 255 → FF</p>
+      </div>
+
+      <!-- Modulo Calculator -->
+      <div v-if="showModuloCalculator" class="converter-box">
+        <h3 class="green">🛠️ MODULO CALCULATOR</h3>
+        <div class="input-line">
+          <span class="green">Sum:</span>
+          <input v-model="moduloInput" type="number" placeholder="Enter sum" style="width: 100px;">
+          <span class="green" style="margin-left: 20px;">Modulus:</span>
+          <input v-model="moduloNumber" type="number" placeholder="Enter modulus" style="width: 100px;">
+          <span class="green" style="margin-left: 20px;">Result:</span>
+          <input :value="moduloResult" readonly style="width: 100px;">
+        </div>
+        <p class="green">Example: 66000 mod 65536 = 464</p>
+      </div>
+
+      <!-- Hashing Tutorial -->
+      <div v-if="showTutorial" class="tutorial">
+        <h3 class="green">📖 HASHING TUTORIAL</h3>
+        <p>This mission uses a simplified hashing algorithm:</p>
+        <ol>
+          <li>For each character in the intercepted message, determine its ASCII value.</li>
+          <li>Add all the ASCII values together (include spaces).</li>
+          <li>Compute the sum modulo 65,536.</li>
+          <li>Convert the result to a 4-digit hexadecimal string (pad with zeros if necessary).</li>
+        </ol>
+        <p>Example: For "AB" → A = 65, B = 66, sum = 131, then 131 mod 65536 = 131, which in hex is 0083.</p>
+        <p>Your task: Use this method to compute the hash of the intercepted message.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          plaintextMessages: [
+            "OPERATION NIGHTFALL: STRIKE AT DAWN",
+            "LAUNCH MISSILES AT 0600 HOURS",
+            "DISABLE ALL DEFENSES IMMEDIATELY",
+            "FINAL TARGET: REBEL HEADQUARTERS",
+            "INITIATE PROTOCOL ZERO, BREACH SECURE ZONE"
+          ],
+          plainTextMessage: "",
+          interceptedHash: "",
+          userHash: "",
+          feedback: "",
+          feedbackClass: "",
+          showTutorial: false,
+          showConverter: false,
+          showIntHexConverter: false,
+          showModuloCalculator: false,
+          converterChar: "",
+          intInput: "",
+          moduloInput: "",
+          moduloNumber: ""
+        };
+      },
+      computed: {
+        charToAscii() {
+          return this.converterChar ? this.converterChar.charCodeAt(0) : "";
+        },
+        intToHex() {
+          if (!this.intInput) return "";
+          const num = parseInt(this.intInput, 10);
+          return isNaN(num) ? "" : num.toString(16).toUpperCase();
+        },
+        moduloResult() {
+          if (!this.moduloInput || !this.moduloNumber) return "";
+          const sum = parseInt(this.moduloInput, 10);
+          const mod = parseInt(this.moduloNumber, 10);
+          if (isNaN(sum) || isNaN(mod) || mod === 0) return "";
+          return (sum % mod).toString();
+        }
+      },
+      methods: {
+        generateMessage() {
+          const messages = this.plaintextMessages;
+          const randomIndex = Math.floor(Math.random() * messages.length);
+          this.plainTextMessage = messages[randomIndex];
+          const computedHash = this.computeHash(this.plainTextMessage);
+          // With 50% chance, tamper the intercepted hash
+          if (Math.random() < 0.5) {
+            this.interceptedHash = computedHash;
+          } else {
+            let tamperedInt = (parseInt(computedHash, 16) + Math.floor(Math.random() * 100) + 1) % 65536;
+            this.interceptedHash = tamperedInt.toString(16).toUpperCase().padStart(4, '0');
+          }
+        },
+        computeHash(message) {
+          let sum = 0;
+          for (let i = 0; i < message.length; i++) {
+            sum += message.charCodeAt(i);
+          }
+          let modVal = sum % 65536;
+          return modVal.toString(16).toUpperCase().padStart(4, '0');
+        },
+        validateAnswer() {
+          const userComputedHash = this.userHash.trim().toUpperCase();
+          const correctHash = this.computeHash(this.plainTextMessage);
+          console.log(correctHash)
+          if (userComputedHash === correctHash) {
+            if (correctHash !== this.interceptedHash) {
+              this.feedback = "✓ Success! Integrity compromised!";
+              this.feedbackClass = "green";
+            } else {
+              this.feedback = "✓ Success! Integrity intact!";
+              this.feedbackClass = "green";
+            }
+          } else {
+            this.feedback = "✗ Incorrect! Hash does not match. Try again.";
+            this.feedbackClass = "red";
+          }
+        },
+        returnDashboard() {
+          window.location.href = "dashboard.html";
+        },
+        reload() {
+          this.generateMessage();
+          this.userHash = "";
+          this.feedback = "";
+          this.feedbackClass = "";
+          this.showTutorial = false;
+          this.showConverter = false;
+          this.showIntHexConverter = false;
+          this.showModuloCalculator = false;
+        }
+      },
+      mounted() {
+        this.generateMessage();
+      }
+    }).mount("#app");
+  </script>
+</body>
+</html>
