@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mission 4: Key Verification (RSA)</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: monospace;
+      padding: 20px;
+    }
+    .green { color: limegreen; }
+    .red { color: red; }
+    .input-line {
+      display: flex;
+      margin: 10px 0;
+    }
+    input {
+      background: black;
+      border: none;
+      color: white;
+      font-family: monospace;
+      outline: none;
+      margin-left: 10px;
+    }
+    .converter-box, .cipher-box, .tutorial {
+      border: 1px solid limegreen;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    .lore {
+      font-style: italic;
+      color: #cccccc;
+      margin-bottom: 15px;
+    }
+    button {
+      background: #002200;
+      color: limegreen;
+      border: 1px solid limegreen;
+      padding: 5px 10px;
+      margin: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="mission-container">
+      <h2 class="green">OPERATION: SILENT KEY</h2>
+      
+      <!-- Updated Lore Section -->
+      <div class="lore">
+        <p>Agent, we have intercepted secure communications from the enemy that utilize RSA encryption.</p>
+        <p>Our intelligence team managed to extract a private key from the transmission; however, it may have been tampered with.</p>
+        <p>Your mission is to compute the correct private key (d) from the public key parameters and verify if the intercepted key is genuine.</p>
+      </div>
+      
+      <!-- RSA Key Information -->
+      <div class="cipher-box">
+        <h3 class="green">PUBLIC KEY:</h3>
+        <p>n = {{ n }}, e = {{ e }}</p>
+        <h3 class="green">INTERCEPTED PRIVATE KEY:</h3>
+        <p>{{ interceptedD }}</p>
+      </div>
+      
+      <!-- Input for computed private key -->
+      <div class="input-line">
+        <span class="green">Computed Private Key (d):</span>
+        <input v-model="userD" placeholder="Enter computed d..." size="20">
+      </div>
+      
+      <div>
+        <button @click="verifyPrivateKey">Verify Private Key</button>
+      </div>
+      
+      <!-- Feedback for verification -->
+      <p v-if="feedback" :class="feedbackClass">{{ feedback }}</p>
+      
+      <!-- Navigation Buttons -->
+      <button v-if="feedback" @click="returnDashboard">Return to Dashboard</button>
+      <button v-if="feedback && feedback.startsWith('✓')" @click="reload">Try another iteration</button>
+      
+      <!-- Toggle Buttons for additional tools -->
+      <button @click="showCalculator = !showCalculator">Toggle Modular Inverse Calculator</button>
+      <button @click="showTutorial = !showTutorial">Toggle RSA Tutorial</button>
+      
+      <!-- Modular Inverse Calculator -->
+      <div v-if="showCalculator" class="converter-box">
+        <h3 class="green">MODULAR INVERSE CALCULATOR</h3>
+        <div class="input-line">
+          <span class="green">Integer:</span>
+          <input v-model="modInt" type="number" placeholder="Enter integer" style="width: 150px;">
+          <span class="green" style="margin-left: 20px;">Modulus:</span>
+          <input v-model="modValue" type="number" placeholder="Enter modulus" style="width: 150px;">
+          <span class="green" style="margin-left: 20px;">Inverse:</span>
+          <input :value="modInverseResult" readonly style="width: 100px;">
+        </div>
+        <p class="green">Example: For 17 mod 3120, the inverse is 2753.</p>
+      </div>
+      
+      <!-- RSA Tutorial -->
+      <div v-if="showTutorial" class="tutorial">
+        <h3 class="green">RSA TUTORIAL</h3>
+        <p>RSA works as follows:</p>
+        <ol>
+            <li>Select two prime numbers p and q, then compute n = p × q.</li>
+            <li>Compute φ(n) = (p-1) × (q-1).</li>
+            <li>Choose a public exponent e, such that 1 < e < φ(n) and e is coprime to φ(n).</li>
+            <li>Compute the private key d, where d × e ≡ 1 (mod φ(n)).</li>
+            <li>To decrypt: message = (ciphertext)^d mod n.</li>
+          </ol>
+        <p>Your task: Verify and compute the correct \( d \) using the modular inverse calculator if needed.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    // Utility function: Compute gcd using the Euclidean algorithm
+    function gcd(a, b) {
+      if (b === 0) return a;
+      return gcd(b, a % b);
+    }
+
+    // Utility function: Compute modular inverse using the Extended Euclidean Algorithm
+    function modInverse(a, m) {
+      let m0 = m, t, q;
+      let x0 = 0, x1 = 1;
+      if (m === 1) return 0;
+      while (a > 1) {
+        q = Math.floor(a / m);
+        t = m;
+        m = a % m;
+        a = t;
+        t = x0;
+        x0 = x1 - q * x0;
+        x1 = t;
+      }
+      return x1 < 0 ? x1 + m0 : x1;
+    }
+
+    createApp({
+      data() {
+        return {
+          showCalculator: false,
+          showTutorial: false,
+          modInt: "",
+          modValue: "",
+          // RSA parameters that change on every reload
+          p: null,
+          q: null,
+          n: null,
+          e: null,
+          phi: null,
+          correctD: null,
+          interceptedD: null,
+          userD: "",
+          feedback: "",
+          feedbackClass: "",
+          isDVerified: false,
+        };
+      },
+      computed: {
+        modInverseResult() {
+          const a = parseInt(this.modInt, 10);
+          const m = parseInt(this.modValue, 10);
+          if (isNaN(a) || isNaN(m) || m === 0 || gcd(a, m) !== 1) {
+            return "";
+          }
+          return modInverse(a, m);
+        }
+      },
+      methods: {
+        generateRSA() {
+          // Use a list of small primes for p and q
+          const primes = [61, 67, 71, 73, 79, 83];
+          this.p = primes[Math.floor(Math.random() * primes.length)];
+          do {
+            this.q = primes[Math.floor(Math.random() * primes.length)];
+          } while (this.q === this.p);
+          this.n = this.p * this.q;
+          this.phi = (this.p - 1) * (this.q - 1);
+          // Choose a public exponent e from possible candidates
+          const possibleE = [3, 5, 17, 257];
+          do {
+            this.e = possibleE[Math.floor(Math.random() * possibleE.length)];
+          } while (gcd(this.e, this.phi) !== 1);
+          // Compute the correct private key d using modular inverse
+          this.correctD = modInverse(this.e, this.phi);
+          // With 50% chance, tamper with the intercepted private key
+          this.interceptedD = (Math.random() < 0.5) ? this.correctD : this.correctD + Math.floor(Math.random() * 10) + 1;
+        },
+        verifyPrivateKey() {
+            console.log(this.correctD)
+          if (parseInt(this.userD, 10) === this.correctD) {
+            this.feedback = "✓ Correct private key! Verification successful.";
+            this.feedbackClass = "green";
+            this.isDVerified = true;
+          } else {
+            this.feedback = "✗ Incorrect private key. Please recalculate.";
+            this.feedbackClass = "red";
+            this.isDVerified = false;
+          }
+        },
+        returnDashboard() {
+          window.location.href = "dashboard.html";
+        },
+        reload() {
+          this.userD = "";
+          this.feedback = "";
+          this.feedbackClass = "";
+          this.isDVerified = false;
+          this.showTutorial = false;
+          this.showCalculator = false;
+          this.generateRSA();
+        }
+      },
+      mounted() {
+        this.generateRSA();
+      }
+    }).mount("#app");
+  </script>
+</body>
+</html>
