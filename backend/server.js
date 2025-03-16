@@ -168,6 +168,26 @@ app.post('/api/score', async (req, res) => {
     }
 });
 
+app.get('/api/leaderboard', async (req, res) => {
+    try {
+        const users = db.collection('users');
+        const leaderboard = await users.find({}, { projection: { username: 1, score: 1 } })
+                                       .sort({ score: -1 })
+                                       .limit(10)
+                                       .toArray();
+
+        res.json({
+            success: true,
+            leaderboard
+        });
+    } catch (error) {
+        console.error('Leaderboard fetch error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error fetching leaderboard'
+        });
+    }
+});
 
 const PORT = 3000;
 app.listen(PORT, () => {
