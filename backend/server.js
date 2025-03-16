@@ -62,7 +62,7 @@ app.post('/api/signup', async (req, res) => {
             email,
             password: hashedPassword,
             createdAt: new Date(),
-            missionCompleted: []
+            score: 0
         });
 
         res.status(201).json({
@@ -125,6 +125,49 @@ app.post('/api/login', async (req, res) => {
         });
     }
 });
+
+app.post('/api/score', async (req, res) => {
+    try {
+        let { username, score } = req.body;
+        console.log("Received score:", score);
+        console.log("Received username:", username)
+        // Ensure score is a number
+        score = Number(score);
+        const users = db.collection('users');
+
+        // Retrieve current score from the database
+        const user = await users.findOne({ username });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Calculate new total score (if score field doesn't exist, assume 0)
+        const currentScore = user.score || 0;
+        const newTotalScore = currentScore + score;
+
+        // Update the user's score using $set
+        const updateResult = await users.updateOne(
+            { username },
+            { $set: { score: newTotalScore } }
+        );
+        console.log("Update result:", updateResult);
+        
+        res.json({
+            success: true,
+            message: 'Score submitted successfully',
+        });
+    } catch (error) {
+        console.error('Score submission error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error during score submission'
+        });
+    }
+});
+
 
 const PORT = 3000;
 app.listen(PORT, () => {
