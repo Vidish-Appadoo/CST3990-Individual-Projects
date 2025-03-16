@@ -20,12 +20,25 @@
       background-color: limegreen;
       color: black;
     }
+    .leaderboard-btn {
+      margin-top: 15px;
+      padding: 8px 12px;
+      background: none;
+      border: 1px solid limegreen;
+      color: limegreen;
+      cursor: pointer;
+      font-family: monospace;
+    }
+    .leaderboard-btn:hover {
+      background-color: limegreen;
+      color: black;
+    }
   </style>
 </head>
 <body>
   <div id="app">
     <h2 class="green">MISSION DASHBOARD</h2>
-    <p>Welcome, Agent <span>{{ agentName }}.</span></p>
+    <p>Welcome, Agent <span>{{ agentName }}</span>.</p>
 
     <div>
       <p v-for="(mission, index) in missions" 
@@ -36,6 +49,7 @@
     </div>
 
     <p class="green">Use ↑ and ↓ to navigate. Press Enter to start.</p>
+    <button class="leaderboard-btn" @click="goToLeaderboard">View Leaderboard</button>
   </div>
 
   <script>
@@ -70,6 +84,9 @@
             this.agentName = name;
             sessionStorage.setItem("agentName", name);
           }
+        },
+        goToLeaderboard() {
+          window.location.href = "leaderboard.html";
         }
       },
       mounted() {

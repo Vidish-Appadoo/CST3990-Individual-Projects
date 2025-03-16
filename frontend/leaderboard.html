@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: monospace;
+            padding: 20px;
+        }
+        .green { color: limegreen; }
+        .gold { color: gold; font-weight: bold; }
+        .leaderboard-box {
+            border: 1px solid limegreen;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            border-bottom: 2px solid limegreen;
+        }
+        tr:nth-child(odd) {
+            background-color: rgba(0, 255, 0, 0.1);
+        }
+        .top-player {
+            background-color: rgba(255, 215, 0, 0.2) !important; /* Golden glow */
+            font-weight: bold;
+            color: gold;
+        }
+        button {
+            background: #002200;
+            color: limegreen;
+            border: 1px solid limegreen;
+            padding: 5px 10px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1 class="green">🏆 LEADERBOARD 🏆</h1>
+        <div class="leaderboard-box">
+            <table>
+                <tr>
+                    <th>#</th>
+                    <th>Agent</th>
+                    <th>Score</th>
+                </tr>
+                <tr v-for="(player, index) in leaderboard" 
+                    :key="player.username" 
+                    :class="{ 'top-player': index === 0 }">
+                    <td>{{ index + 1 }}</td>
+                    <td :class="{ 'gold': index === 0 }">{{ player.username }}</td>
+                    <td>{{ player.score }}</td>
+                </tr>
+            </table>
+        </div>
+        <button @click="returnDashboard">Return to Dashboard</button>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    leaderboard: []
+                };
+            },
+            methods: {
+                fetchLeaderboard() {
+                    fetch("http://localhost:3000/api/leaderboard")
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                this.leaderboard = data.leaderboard;
+                            }
+                        })
+                        .catch(error => console.error("Error fetching leaderboard:", error));
+                },
+                returnDashboard() {
+                    window.location.href = "dashboard.html";
+                }
+            },
+            mounted() {
+                this.fetchLeaderboard();
+            }
+        }).mount("#app");
+    </script>
+</body>
+</html>
