@@ -44,6 +44,10 @@
       margin: 5px;
       cursor: pointer;
     }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -73,7 +77,7 @@
       </div>
       
       <div>
-        <button @click="verifyPrivateKey">Verify Private Key</button>
+        <button @click="verifyPrivateKey" :disabled="submittedCorrectly" >Verify Private Key</button>
       </div>
       
       <!-- Feedback for verification -->
@@ -162,6 +166,7 @@
           feedback: "",
           feedbackClass: "",
           isDVerified: false,
+          submittedCorrectly: false
         };
       },
       computed: {
@@ -193,18 +198,37 @@
           this.correctD = modInverse(this.e, this.phi);
           // With 50% chance, tamper with the intercepted private key
           this.interceptedD = (Math.random() < 0.5) ? this.correctD : this.correctD + Math.floor(Math.random() * 10) + 1;
+
+          this.submittedCorrectly =  false
         },
         verifyPrivateKey() {
             console.log(this.correctD)
-          if (parseInt(this.userD, 10) === this.correctD) {
-            this.feedback = "✓ Correct private key! Verification successful.";
-            this.feedbackClass = "green";
-            this.isDVerified = true;
-          } else {
-            this.feedback = "✗ Incorrect private key. Please recalculate.";
-            this.feedbackClass = "red";
-            this.isDVerified = false;
-          }
+            if (parseInt(this.userD, 10) === this.correctD) {
+                this.feedback = "✓ Correct private key! Verification successful.";
+                this.feedbackClass = "green";
+                this.isDVerified = true;
+                this.submittedCorrectly = true;
+
+                // Extract username from URL query parameters
+                const params = new URLSearchParams(window.location.search);
+                const username = params.get('agent') || "Anonymous";
+                const score = 100;
+
+                // Send score to backend
+                fetch("http://localhost:3000/api/score", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, score })
+                })
+                .then(response => response.json())
+                .then(data => console.log("Score submitted:", data))
+                .catch(error => console.error("Error submitting score:", error));
+
+            } else {
+                this.feedback = "✗ Incorrect private key. Please recalculate.";
+                this.feedbackClass = "red";
+                this.isDVerified = false;
+            }
         },
         returnDashboard() {
           window.location.href = "dashboard.html";

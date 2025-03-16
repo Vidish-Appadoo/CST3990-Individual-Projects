@@ -48,6 +48,11 @@
         .binary-output {
             letter-spacing: 3px;
         }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -65,7 +70,7 @@
                 <h4 class="green">PLAINTEXT CODE:</h4>
                 <p>{{ plainTextCode }}</p>
                 <h4 class="green">XOR KEY:</h4>
-                <p>X</p>
+                <p>{{ xorKeyChar }} </p>
             </div>
 
             <div class="input-line">
@@ -76,7 +81,8 @@
             <div>
                 <button @click="showConverter = !showConverter">Toggle Converter</button>
                 <button @click="showTutorial = !showTutorial">XOR Tutorial</button>
-                <button @click="validateAnswer">Submit</button>
+                <button @click="validateAnswer" :disabled="submittedCorrectly">Submit</button>
+            </div>
             </div>
 
             <p v-if="feedback" :class="feedbackClass">{{ feedback }}</p>
@@ -116,14 +122,15 @@
             data() {
                 return {
                     plainTextCode: "",
-                    xorKey: 88, // ASCII value of "X"
+                    xorKey: 0, 
                     userBinary: "",
                     correctBinary: "",
                     feedback: "",
                     feedbackClass: "",
                     showConverter: false,
                     showTutorial: false,
-                    converterChar: ""
+                    converterChar: "",
+                    submittedCorrectly: false
                 };
             },
             computed: {
@@ -138,7 +145,10 @@
             methods: {
                 generateCode() {
                     this.plainTextCode = this.getRandomAlphanumeric(4); // Generate a random 4-character code
+                    this.xorKey = this.getRandomXORKey();
+                    this.xorKeyChar = String.fromCharCode(this.xorKey);
                     this.correctBinary = this.xorEncrypt(this.plainTextCode, this.xorKey); // Encrypt it using XOR
+                    this.submittedCorrectly = false
                 },
                 getRandomAlphanumeric(length) {
                     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -147,6 +157,9 @@
                         result += chars.charAt(Math.floor(Math.random() * chars.length));
                     }
                     return result;
+                },
+                getRandomXORKey() {
+                    return Math.floor(Math.random() * (90 - 65 + 1)) + 65; 
                 },
                 xorEncrypt(code, key) {
                     return [...code].map(char => 
@@ -158,6 +171,22 @@
                     if (cleanInput === this.correctBinary) {
                         this.feedback = "✓ SUCCESS! Transmission encrypted!";
                         this.feedbackClass = "green";
+                        this.submittedCorrectly = true;
+
+                        // Calculate score (fixed for this mission)
+                        const score = 100;
+                        // Extract the username from the query parameter "agent"
+                        const params = new URLSearchParams(window.location.search);
+                        const username = params.get('agent');
+                        // Send score to backend endpoint
+                        fetch("http://localhost:3000/api/score", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username, score })
+                        })
+                        .then(response => response.json())
+                        .then(data => console.log("Score submitted:", data))
+                        .catch(error => console.error("Error submitting score:", error));
                     } else {
                         this.feedback = "✗ ERROR! Invalid ciphertext!";
                         this.feedbackClass = "red";

@@ -185,6 +185,7 @@
                           this.signupSuccessMessage = `Welcome to the Agency [${this.signupUsername}]`;
                           this.signupErrorMessage = '';
                           this.showSignUp = false;
+                          window.location.href = "dashboard.html?agent=" + encodeURIComponent(this.username);
                       } else {
                           this.signupErrorMessage = data.message || "Registration failed!";
                       }
@@ -194,11 +195,6 @@
                       this.signupErrorMessage = "An error occurred during registration!";
                   });
               },
-              returnDashboard() {
-                  if (this.welcomeMessage || this.signupSuccessMessage) {
-                      window.location.href = "dashboard.html";
-                  }
-              }
           }
       }).mount('#app');
   </script>

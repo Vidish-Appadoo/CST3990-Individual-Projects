@@ -47,6 +47,11 @@
     .binary-output {
       letter-spacing: 3px;
     }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -77,7 +82,7 @@
       </div>
 
       <div>
-        <button @click="validateAnswer">Submit</button>
+        <button @click="validateAnswer" :disabled="submittedCorrectly">Submit</button>
         <button @click="showConverter = !showConverter">Toggle ASCII Converter</button>
         <button @click="showIntHexConverter = !showIntHexConverter">Toggle Integer to Hex Converter</button>
         <button @click="showModuloCalculator = !showModuloCalculator">Toggle Modulo Calculator</button>
@@ -169,7 +174,8 @@
           converterChar: "",
           intInput: "",
           moduloInput: "",
-          moduloNumber: ""
+          moduloNumber: "",
+          submittedCorrectly: false
         };
       },
       computed: {
@@ -195,6 +201,7 @@
           const randomIndex = Math.floor(Math.random() * messages.length);
           this.plainTextMessage = messages[randomIndex];
           const computedHash = this.computeHash(this.plainTextMessage);
+          this.submittedCorrectly = false
           // With 50% chance, tamper the intercepted hash
           if (Math.random() < 0.5) {
             this.interceptedHash = computedHash;
@@ -214,7 +221,8 @@
         validateAnswer() {
           const userComputedHash = this.userHash.trim().toUpperCase();
           const correctHash = this.computeHash(this.plainTextMessage);
-          console.log(correctHash)
+          console.log(correctHash);
+
           if (userComputedHash === correctHash) {
             if (correctHash !== this.interceptedHash) {
               this.feedback = "✓ Success! Integrity compromised!";
@@ -223,6 +231,24 @@
               this.feedback = "✓ Success! Integrity intact!";
               this.feedbackClass = "green";
             }
+
+            this.submittedCorrectly = true;
+
+            // Extract username from URL query parameters
+            const params = new URLSearchParams(window.location.search);
+            const username = params.get('agent') || "Anonymous";
+            const score = 100;
+
+            // Send score to backend
+            fetch("http://localhost:3000/api/score", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username, score })
+            })
+            .then(response => response.json())
+            .then(data => console.log("Score submitted:", data))
+            .catch(error => console.error("Error submitting score:", error));
+
           } else {
             this.feedback = "✗ Incorrect! Hash does not match. Try again.";
             this.feedbackClass = "red";
