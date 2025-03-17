@@ -25,6 +25,9 @@
       font-family: monospace;
       outline: none;
       margin-left: 10px;
+      padding: 8px;
+      border: 1px solid limegreen;
+      flex-grow: 1;
     }
     .tutorial {
       border: 1px solid limegreen;
@@ -48,10 +51,52 @@
       padding: 5px 10px;
       margin: 5px;
       cursor: pointer;
+      transition: all 0.2s;
+    }
+    button:hover:not(:disabled) {
+      background: limegreen;
+      color: #002200;
     }
     button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+    .cipher-letter {
+      cursor: pointer;
+      transition: all 0.3s;
+      margin: 0 2px;
+    }
+    .cipher-letter:hover {
+      color: #2ecc71;
+      transform: translateY(-2px);
+    }
+    .revealed {
+      color: limegreen !important;
+      font-weight: bold;
+    }
+    .shift-controls {
+      margin: 15px 0;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .shift-slider {
+      flex-grow: 1;
+    }
+    .virtual-keyboard {
+      margin: 20px 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      justify-content: center;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    .success-animation {
+      animation: pulse 1s;
     }
   </style>
 </head>
@@ -60,21 +105,42 @@
     <div class="mission-container">
       <h2 class="green">OPERATION: CIPHER BREAKER</h2>
       
-      <!-- Lore Section -->
       <div class="lore">
         <p>Agent, your mission begins now. Our intelligence has intercepted a cryptic message from CipherX—a notorious adversary whose hidden plans threaten global security.</p>
         <p>Your expertise in decryption is vital. Each cipher you crack brings us closer to neutralizing this threat. Trust your instincts, and remember: sometimes, a simple shift can reveal hidden truths.</p>
       </div>
       
-      <!-- Cipher Box with dynamic encrypted message -->
       <div class="cipher-box">
         <h3 class="green">ENCRYPTED MESSAGE:</h3>
-        <p>{{ encryptedMessage }}</p>
+        <p>
+          <span v-for="(char, index) in encryptedMessage" 
+                :key="index" 
+                class="cipher-letter"
+                @click="revealLetter(index)"
+                :class="{ revealed: revealedLetters.has(index) }"
+                :title="revealedLetters.has(index) ? 'Decrypted letter' : `Click to reveal (${3 - revealedLetters.size} remaining)`">
+            {{ char }}
+          </span>
+        </p>
+      </div>
+
+      <div class="shift-controls">
+        <button class="green" @click="adjustShift(-1)">← Shift -1</button>
+        <input type="range" min="1" max="25" v-model="currentShift" class="shift-slider">
+        <button class="green" @click="adjustShift(1)">Shift +1 →</button>
+        <span class="green">Current Shift: {{ currentShift }}</span>
       </div>
 
       <div class="input-line">
         <span class="green">Decrypted Message:</span>
-        <input v-model="userAnswer" @keydown.enter="checkAnswer" size="50" placeholder="Enter decrypted text here...">
+        <input v-model="userAnswer" @keydown.enter="checkAnswer" placeholder="Enter decrypted text here...">
+      </div>
+
+      <div class="virtual-keyboard">
+        <button v-for="char in keyboard">
+          {{ char }}<br>
+          <span style="color: red; padding: 10px;">{{ decryptChar(char) }}</span>
+        </button>
       </div>
 
       <div>
@@ -86,7 +152,6 @@
       <p v-if="showHint" class="green">HINT: Sometimes, a simple shift can reveal hidden truths.</p>
       <p v-if="feedback" :class="feedbackClass">{{ feedback }}</p>
 
-      <!-- Navigation Buttons -->
       <button v-if="feedback" @click="returnDashboard">Return to Dashboard</button>
       <button v-if="feedback === '✓ Success! Message decrypted!'" @click="reload">Try another iteration</button>
      
@@ -135,17 +200,21 @@
           ],
           plaintextMessage: '',
           shift: 0,
+          currentShift: 0,
           encryptedMessage: '',
           correctAnswer: '',
           feedback: '',
           feedbackClass: '',
           showHint: false,
           showTutorial: false,
-          submittedCorrectly: false
+          submittedCorrectly: false,
+          revealedLetters: new Set(),
+          keyboard: ['Q','W','E','R','T','Y','U','I','O','P','A','S','D','F','G','H','J','K','L','Z','X','C','V','B','N','M']
         };
       },
+
+
       methods: {
-        // Generate a new cipher each time the mission loads
         generateCipher() {
           const messages = this.plaintextMessages;
           const randomIndex = Math.floor(Math.random() * messages.length);
@@ -154,8 +223,9 @@
           this.encryptedMessage = this.caesarEncrypt(this.plaintextMessage, this.shift);
           this.correctAnswer = this.plaintextMessage.toLowerCase();
           this.submittedCorrectly = false;
+          this.revealedLetters.clear();
+          this.currentShift = 0;
         },
-        // Caesar cipher encryption function
         caesarEncrypt(text, shift) {
           let result = '';
           for (let i = 0; i < text.length; i++) {
@@ -174,20 +244,46 @@
           }
           return result.toUpperCase();
         },
+        caesarDecrypt(text, shift) {
+          let result = '';
+          for (let i = 0; i < text.length; i++) {
+            let c = text[i];
+            if (c >= 'a' && c <= 'z') {
+              let code = text.charCodeAt(i);
+              let newCode = ((code - 97 - shift + 26) % 26) + 97;
+              result += String.fromCharCode(newCode);
+            } else if (c >= 'A' && c <= 'Z') {
+              let code = text.charCodeAt(i);
+              let newCode = ((code - 65 - shift + 26) % 26) + 65;
+              result += String.fromCharCode(newCode);
+            } else {
+              result += c;
+            }
+          }
+          return result;
+        },
+        adjustShift(amount) {
+          this.currentShift = (this.currentShift + amount + 26) % 26;
+        },
+        revealLetter(index) {
+          if (this.revealedLetters.size < 3 && !this.revealedLetters.has(index)) {
+            this.revealedLetters.add(index);
+          }
+        },
+        decryptChar(char) {
+          return this.caesarDecrypt(char, this.currentShift);
+        },
         checkAnswer() {
-            console.log(this.correctAnswer)
+          console.log(this.correctAnswer)
           if (this.userAnswer.trim().toLowerCase() === this.correctAnswer) {
             this.feedback = "✓ Success! Message decrypted!";
             this.feedbackClass = "green";
             this.submittedCorrectly = true;
             
-            // Calculate score (for simplicity, fixed score)
             const score = 100;
-            // Extract the username from the query parameter "agent"
             const params = new URLSearchParams(window.location.search);
             const username = params.get('agent') || "Anonymous";
 
-            // Send score to backend endpoint
             fetch("http://localhost:3000/api/score", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
