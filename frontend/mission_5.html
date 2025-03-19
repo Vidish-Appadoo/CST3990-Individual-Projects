@@ -1,1 +1,230 @@
- 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission 5: Hidden Cipher</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: monospace;
+            padding: 20px;
+        }
+        .green { color: limegreen; }
+        .red { color: red; }
+        .message-box {
+            border: 1px solid limegreen;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 1.5em;
+            line-height: 2em;
+            max-width: 90%;
+            word-spacing: 15px;
+        }
+        .letter {
+            color: white;
+            transition: color 0.3s ease;
+            display: inline-block;
+            user-select: none;
+            font-size: 1.5em;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+        .letter.selected {
+            color: limegreen;
+            font-weight: bold;
+        }
+        .lore {
+            font-style: italic;
+            color: #cccccc;
+            margin-bottom: 15px;
+        }
+        button {
+            background: #002200;
+            color: limegreen;
+            border: 1px solid limegreen;
+            padding: 5px 10px;
+            margin: 10px;
+            cursor: pointer;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .hint-box, .tutorial-box {
+            border: 1px solid limegreen;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="mission-container">
+            <h2 class="green">OPERATION: HIDDEN CIPHER</h2>
+
+            <div class="lore">
+                <p>Agent, CipherX is using steganography to smuggle hidden messages within ordinary-looking text.</p>
+                <p>Your mission: Analyze the hint and extract the concealed message before it's too late.</p>
+            </div>
+
+            <button @click="showTutorial = !showTutorial">Toggle Tutorial</button>
+            <button @click="showHint = !showHint">Show Hint</button>
+
+            <!-- Steganography Tutorial -->
+            <div v-if="showTutorial" class="tutorial-box">
+                <h3 class="green">📖 STEGANOGRAPHY TUTORIAL</h3>
+                <p>Steganography is the practice of hiding messages within ordinary text or images.</p>
+                <p>Unlike encryption, where data is scrambled, steganography conceals the fact that a message exists at all.</p>
+                <p>Example Techniques:</p>
+                <ul>
+                    <li>Hiding the message in the first, last, or specific letters of words.</li>
+                    <li>Encoding text in whitespace patterns or special characters.</li>
+                    <li>Embedding data within images using pixel modifications.</li>
+                </ul>
+                <p>Here, you must click the correct letters in the sentence to reveal the secret phrase.</p>
+            </div>
+
+            <!-- Hint Section -->
+            <div v-if="showHint" class="hint-box">
+                <h3 class="green">🔎 HINT</h3>
+                <p>{{ currentHint }}</p>
+            </div>
+
+            <div class="message-box">
+                <span v-for="(letter, index) in messageArray" 
+                      :key="index" 
+                      :class="{ 'letter': true, 'selected': selectedIndices.includes(index) }"
+                      @click="toggleSelection(index)">
+                    {{ letter }}
+                </span>
+            </div>
+
+            <p v-if="feedback" :class="feedbackClass">{{ feedback }}</p>
+
+            <button @click="validateAnswer" :disabled="submittedCorrectly">Submit</button>
+            <button v-if="feedback" @click="returnDashboard">Return to Dashboard</button>
+            <button v-if="feedback && feedback.startsWith('✓')" @click="reload">Try Another Challenge</button>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    messages: [
+                        { 
+                            text: "Please act decisively, leaving our classified keys. 1234",
+                            hiddenWord: "PADLOCK",
+                            hint: "1"
+                        },
+                        { 
+                            text: "Even snakes crawl around happy peaches tightly.",
+                            hiddenWord: "ENCRYPT",
+                            hint: "1st 2nd and last"
+                            
+                        },
+                        { 
+                            text: "Sculture bonding idolistic gecko",
+                            hiddenWord: "CODE",
+                            hint: "2nd"
+                           
+                        },
+                        { 
+                            text: "Elephants In Ivory Castles Hide Incredible Riches Often.",
+                            hiddenWord: "EIICHIRO",
+                            hint: "↑"
+                           
+                        },
+                        {
+                            text: "Acid above isles about alter cacao spray",
+                            hiddenWord: "DESTROY",
+                            hint: "Last"
+                        }
+                    ],
+                    messageText: "",
+                    messageArray: [],
+                    hiddenWord: "",
+                    hiddenIndices: [],
+                    selectedIndices: [],
+                    currentHint: "",
+                    feedback: "",
+                    feedbackClass: "",
+                    submittedCorrectly: false,
+                    showTutorial: false,
+                    showHint: false
+                };
+            },
+            methods: {
+                generateMessage() {
+                    const selectedData = this.messages[Math.floor(Math.random() * this.messages.length)];
+                    this.messageText = selectedData.text;
+                    this.hiddenWord = selectedData.hiddenWord;
+                    this.currentHint = selectedData.hint;
+
+                    // Convert message text into an array of characters for display
+                    this.messageArray = this.messageText.split("");
+
+                    // Determine which characters should be selected to reveal the hidden word
+                    const words = this.messageText.split(" ");
+                    
+                    this.submittedCorrectly = false;
+                },
+                toggleSelection(index) {
+                    if (this.selectedIndices.includes(index)) {
+                        this.selectedIndices = this.selectedIndices.filter(i => i !== index);
+                    } else {
+                        this.selectedIndices.push(index);
+                    }
+                },
+                validateAnswer() {
+                    const selectedLetters = this.selectedIndices.map(i => this.messageArray[i]).join("");
+                    console.log(this.hiddenWord)
+                    console.log(selectedLetters.toUpperCase())
+                    
+                    if (selectedLetters.toUpperCase() === this.hiddenWord) {
+                        this.feedback = "✓ Success! Hidden message decrypted.";
+                        this.feedbackClass = "green";
+                        this.submittedCorrectly = true;
+
+                        const score = 100;
+                        const params = new URLSearchParams(window.location.search);
+                        const username = params.get('agent') || "Anonymous";
+
+                        fetch("http://localhost:3000/api/score", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username, score })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                        console.log("Score submitted:", data);
+                        })
+                        .catch(error => {
+                        console.error("Error submitting score:", error);
+                        });
+                    } else {
+                        this.feedback = "✗ Error! Incorrect decryption.";
+                        this.feedbackClass = "red";
+                    }
+                },
+                returnDashboard() {
+                    window.location.href = "dashboard.html";
+                },
+                reload() {
+                    this.generateMessage();
+                    this.feedback = "";
+                    this.feedbackClass = "";
+                }
+            },
+            mounted() {
+                this.generateMessage();
+            }
+        }).mount("#app");
+    </script>
+</body>
+</html>
