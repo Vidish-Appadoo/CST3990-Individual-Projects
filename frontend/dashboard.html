@@ -77,7 +77,7 @@
           } else if (event.key === "ArrowDown") {
             this.selectedMission = (this.selectedMission + 1) % this.missions.length;
           } else if (event.key === "Enter") {
-            window.location.href = this.missions[this.selectedMission].url + "?agent=" + encodeURIComponent(this.agentName);
+            location.replace(this.missions[this.selectedMission].url + "?agent=" + encodeURIComponent(this.agentName));
           }
         },
         getAgentName() {
