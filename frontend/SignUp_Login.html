@@ -187,7 +187,7 @@
                           this.signupSuccessMessage = `Welcome to the Agency [${this.signupUsername}]`;
                           this.signupErrorMessage = '';
                           this.showSignUp = false;
-                          window.location.href = "dashboard.html?agent=" + encodeURIComponent(this.username);
+                          window.location.href = "dashboard.html?agent=" + encodeURIComponent(this.signupUsername);
                           this.username = ''
                           this.password = ''
                       } else {
