@@ -134,7 +134,7 @@
                   this.$nextTick(() => this.$refs.confirmPasswordSignupInput.focus());
               },
               authenticateUser() {
-                  fetch("http://localhost:3000/api/login", {
+                  fetch("https://cst3990-individual-projects.onrender.com/api/login", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ username: this.username, password: this.password })
