@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json());
 
 app.use(cors({
-    origin: 'https://vidish-appadoo.github.io/CST3990-Individual-Projects/frontend/SignUp_Login.html', // Replace with your frontend URL
+    origin: 'https://vidish-appadoo.github.io', // Replace with your frontend URL
     credentials: true
 }));
 
