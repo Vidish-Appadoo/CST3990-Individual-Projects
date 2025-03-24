@@ -167,7 +167,7 @@
                       this.signupErrorMessage = "Invalid email format!";
                       return;
                   }
-                  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$/;
+                  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
                   if (!passwordRegex.test(this.signupPassword)) {
                       this.signupErrorMessage = "Password must contain:\n- At least 8 characters\n- 1 uppercase letter\n- 1 lowercase letter\n- 1 number";
                       return;
