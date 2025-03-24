@@ -1,13 +1,12 @@
 require('dotenv').config();
 const express = require('express');
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 
 const app = express();
 app.use(express.json());
-
 
 // MongoDB Connection
 const client = new MongoClient(process.env.MONGODB_URI);
@@ -42,7 +41,7 @@ const authMiddleware = async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await db.collection('users').findOne({ _id: new MongoClient().ObjectId(decoded.userId) });
+        const user = await db.collection('users').findOne({ _id: new ObjectId(decoded.userId) });
         if (!user) {
             return res.status(401).json({
                 success: false,
@@ -256,6 +255,7 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
 app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}/login`);
+    console.log(`Server running at ${baseUrl}/login`);
 });
