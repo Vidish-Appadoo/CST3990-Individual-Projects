@@ -162,7 +162,7 @@
                       this.signupErrorMessage = "All fields are required!";
                       return;
                   }
-                  const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                   if (!emailRegex.test(this.signupEmail)) {
                       this.signupErrorMessage = "Invalid email format!";
                       return;
