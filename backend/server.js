@@ -1,18 +1,13 @@
-// backend.js
 require('dotenv').config();
 const express = require('express');
 const { MongoClient } = require('mongodb');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const cors = require('cors');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
 
-app.use(cors({
-    origin: 'http://127.0.0.1:5500', // Replace with your frontend URL
-    credentials: true
-}));
 
 // MongoDB Connection
 const client = new MongoClient(process.env.MONGODB_URI);
@@ -34,6 +29,38 @@ async function connectDB() {
 }
 
 connectDB();
+
+// Authentication middleware
+const authMiddleware = async (req, res, next) => {
+    const token = req.headers['authorization']?.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({
+            success: false,
+            message: 'Authorization header required'
+        });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await db.collection('users').findOne({ _id: new MongoClient().ObjectId(decoded.userId) });
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+        req.user = user;
+        next();
+    } catch (error) {
+        return res.status(401).json({
+            success: false,
+            message: 'Invalid token'
+        });
+    }
+};
+
+// Serve static files from frontend directory
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 // API Endpoints
 app.post('/api/signup', async (req, res) => {
@@ -189,7 +216,57 @@ app.get('/api/leaderboard', async (req, res) => {
     }
 });
 
-const PORT = 3000;
+//logout endpoint
+app.post('/api/logout', (req, res) => {
+    // For JWT authentication, logging out can be as simple as removing the token from the client
+    // Since JWTs are stateless, there's no need to invalidate them on the server
+    // However, you could implement a token blacklist if needed
+    res.json({
+        success: true,
+        message: 'Logged out successfully'
+    });
+});
+
+// Route to serve the login page
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/SignUp_Login.html'));
+});
+
+// Route to serve the dashboard (protected)
+app.get('/dashboard', authMiddleware, (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dashboard.html'));
+});
+
+// Routes to serve the missions (protected)
+app.get('/mission/:number', authMiddleware, (req, res) => {
+    const missionNumber = req.params.number;
+    const missionFiles = {
+        '1': 'mission_1.html',
+        '2': 'mission_2.html',
+        '3': 'mission_3.html',
+        '4': 'mission_4.html',
+        '5': 'mission_5.html'
+    };
+    
+    const missionFile = missionFiles[missionNumber];
+    if (missionFile) {
+        res.sendFile(path.join(__dirname, '../frontend', missionFile));
+    } else {
+        res.status(404).sendFile(path.join(__dirname, '../frontend/404.html'));
+    }
+});
+
+// Route to serve the leaderboard (protected)
+app.get('/leaderboard', authMiddleware, (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/leaderboard.html'));
+});
+
+// Handle 404 errors
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(__dirname, '../frontend/404.html'));
+});
+
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server running at http://localhost:${PORT}/login`);
 });
