@@ -180,7 +180,7 @@
                         const params = new URLSearchParams(window.location.search);
                         const username = params.get('agent');
                         // Send score to backend endpoint
-                        fetch("http://localhost:3000/api/score", {
+                        fetch("https://cst3990-individual-projects.onrender.com/api/score", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ username, score })

@@ -81,7 +81,7 @@
             },
             methods: {
                 fetchLeaderboard() {
-                    fetch("http://localhost:3000/api/leaderboard")
+                    fetch("https://cst3990-individual-projects.onrender.com/api/leaderboard")
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {

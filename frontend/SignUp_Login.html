@@ -172,7 +172,7 @@
                       this.signupErrorMessage = "Password must contain:\n- At least 8 characters\n- 1 uppercase letter\n- 1 lowercase letter\n- 1 number";
                       return;
                   }
-                  fetch("http://localhost:3000/api/signup", {
+                  fetch("https://cst3990-individual-projects.onrender.com/api/signup", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
