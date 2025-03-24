@@ -216,17 +216,6 @@ app.get('/api/leaderboard', async (req, res) => {
     }
 });
 
-//logout endpoint
-app.post('/api/logout', (req, res) => {
-    // For JWT authentication, logging out can be as simple as removing the token from the client
-    // Since JWTs are stateless, there's no need to invalidate them on the server
-    // However, you could implement a token blacklist if needed
-    res.json({
-        success: true,
-        message: 'Logged out successfully'
-    });
-});
-
 // Route to serve the login page
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/SignUp_Login.html'));
