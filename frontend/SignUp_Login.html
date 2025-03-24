@@ -144,6 +144,8 @@
                       if (data.success) {
                           // Redirect to dashboard.html with username in query string
                           window.location.href = "dashboard.html?agent=" + encodeURIComponent(this.username);
+                          this.username = ''
+                          this.password = ''
                       } else {
                           this.errorMessage = "Incorrect Username or Password. Please Try Again.";
                           this.welcomeMessage = '';
@@ -186,6 +188,8 @@
                           this.signupErrorMessage = '';
                           this.showSignUp = false;
                           window.location.href = "dashboard.html?agent=" + encodeURIComponent(this.username);
+                          this.username = ''
+                          this.password = ''
                       } else {
                           this.signupErrorMessage = data.message || "Registration failed!";
                       }
@@ -194,8 +198,8 @@
                       console.error("Error:", error);
                       this.signupErrorMessage = "An error occurred during registration!";
                   });
-              },
-          }
+                },
+            }
       }).mount('#app');
   </script>
 </body>

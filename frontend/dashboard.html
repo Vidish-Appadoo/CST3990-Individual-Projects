@@ -20,7 +20,7 @@
       background-color: limegreen;
       color: black;
     }
-    .leaderboard-btn {
+    .leaderboard-btn, .logout-btn {
       margin-top: 15px;
       padding: 8px 12px;
       background: none;
@@ -29,7 +29,7 @@
       cursor: pointer;
       font-family: monospace;
     }
-    .leaderboard-btn:hover {
+    .leaderboard-btn:hover, .logout-btn:hover {
       background-color: limegreen;
       color: black;
     }
@@ -50,6 +50,7 @@
 
     <p class="green">Use ↑ and ↓ to navigate. Press Enter to start.</p>
     <button class="leaderboard-btn" @click="goToLeaderboard">View Leaderboard</button>
+    <button class="logout-btn" @click="logout">Log Out</button>
   </div>
 
   <script>
@@ -88,6 +89,10 @@
         },
         goToLeaderboard() {
           window.location.href = "leaderboard.html";
+        },
+        logout() {
+          sessionStorage.removeItem("agentName");
+          location.replace('SignUp_Login.html');
         }
       },
       mounted() {
