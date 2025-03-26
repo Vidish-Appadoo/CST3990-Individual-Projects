@@ -15,7 +15,6 @@
     .green { color: limegreen; }
     .mission {
       padding: 5px 10px;
-      cursor: pointer;
     }
     .selected {
       background-color: limegreen;
@@ -43,9 +42,9 @@
 
     <div>
       <p v-for="(mission, index) in missions" 
-         :class="{ 'selected': selectedMission === index }" 
-         class="mission"
-         @click="navigateToMission(index)">
+        :class="{ 'selected': selectedMission === index }" 
+        class="mission"
+        @click="navigateToMission(index)">
         >> {{ mission.name }}
       </p>
     </div>
@@ -79,28 +78,22 @@
           } else if (event.key === "ArrowDown") {
             this.selectedMission = (this.selectedMission + 1) % this.missions.length;
           } else if (event.key === "Enter") {
-            this.navigateToMission(this.selectedMission);
+            location.replace(this.missions[this.selectedMission].url + "?agent=" + encodeURIComponent(this.agentName));
           }
-        },
-        navigateToMission(index) {
-          const missionUrl = this.missions[index].url + "?agent=" + encodeURIComponent(this.agentName);
-          window.location.replace(missionUrl);
         },
         getAgentName() {
           let name = new URLSearchParams(window.location.search).get("agent") || sessionStorage.getItem("agentName");
-          if (!name) {
-            window.location.replace("SignUp_Login.html");
-          } else {
+          if (name) {
             this.agentName = name;
             sessionStorage.setItem("agentName", name);
           }
         },
         goToLeaderboard() {
-          window.location.replace('leaderboard.html');
+          location.replace('leaderboard.html')
         },
         logout() {
           sessionStorage.removeItem("agentName");
-          window.location.replace('SignUp_Login.html');
+          location.replace('SignUp_Login.html');
         }
       },
       mounted() {
