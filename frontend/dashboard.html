@@ -15,6 +15,11 @@
     .green { color: limegreen; }
     .mission {
       padding: 5px 10px;
+      cursor: pointer;
+    }
+    .mission:hover {
+      background-color: limegreen;
+      color: black;
     }
     .selected {
       background-color: limegreen;
@@ -42,14 +47,14 @@
 
     <div>
       <p v-for="(mission, index) in missions" 
-        :class="{ 'selected': selectedMission === index }" 
-        class="mission"
-        @click="navigateToMission(index)">
+         :class="{ 'selected': selectedMission === index }" 
+         class="mission"
+         @click="navigateToMission(index)">
         >> {{ mission.name }}
       </p>
     </div>
 
-    <p class="green">Use ↑ and ↓ to navigate. Press Enter to start.</p>
+    <p class="green">Use ↑ and ↓ to navigate. Press Enter to start, or click a mission to launch it.</p>
     <button class="leaderboard-btn" @click="goToLeaderboard">View Leaderboard</button>
     <button class="logout-btn" @click="logout">Log Out</button>
   </div>
@@ -82,22 +87,25 @@
           }
         },
         navigateToMission(index) {
+          this.selectedMission = index; // Visually highlight the selected mission
           const missionUrl = this.missions[index].url + "?agent=" + encodeURIComponent(this.agentName);
           window.location.replace(missionUrl);
         },
         getAgentName() {
           let name = new URLSearchParams(window.location.search).get("agent") || sessionStorage.getItem("agentName");
-          if (name) {
+          if (!name) {
+            window.location.replace("SignUp_Login.html");
+          } else {
             this.agentName = name;
             sessionStorage.setItem("agentName", name);
           }
         },
         goToLeaderboard() {
-          location.replace('leaderboard.html')
+          window.location.replace('leaderboard.html');
         },
         logout() {
           sessionStorage.removeItem("agentName");
-          location.replace('SignUp_Login.html');
+          window.location.replace('SignUp_Login.html');
         }
       },
       mounted() {
