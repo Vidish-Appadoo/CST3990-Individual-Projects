@@ -37,7 +37,6 @@
     .leaderboard-btn:hover, .logout-btn:hover {
       background-color: limegreen;
       color: black;
-      cursor: pointer;
     }
   </style>
 </head>
@@ -50,7 +49,9 @@
       <p v-for="(mission, index) in missions" 
          :key="index"
          @click="navigateToMission(index)"
-         :class="{ 'selected': selectedMission === index }" 
+         @mouseover="hoveredMission = index"
+         @mouseleave="hoveredMission = null"
+         :class="{ 'selected': hoveredMission !== null ? hoveredMission === index : selectedMission === index }" 
          class="mission">
         >> {{ mission.name }}
       </p>
@@ -75,7 +76,8 @@
             { name: "mission 4 _ Silent Key", url: "mission_4.html" },
             { name: "mission 5 _ Hidden In Plain Sight", url: "mission_5.html" }
           ],
-          selectedMission: 0
+          selectedMission: 0,
+          hoveredMission: null
         };
       },
       methods: {
@@ -89,7 +91,7 @@
           }
         },
         navigateToMission(index) {
-          this.selectedMission = index; 
+          this.selectedMission = index; // Ensure visual update
           const missionUrl = this.missions[index].url + "?agent=" + encodeURIComponent(this.agentName);
           window.location.replace(missionUrl);
         },
