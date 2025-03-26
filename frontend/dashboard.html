@@ -47,14 +47,15 @@
 
     <div>
       <p v-for="(mission, index) in missions" 
+         :key="index"
+         @click="navigateToMission(index)"
          :class="{ 'selected': selectedMission === index }" 
-         class="mission"
-         @click="navigateToMission(index)">
+         class="mission">
         >> {{ mission.name }}
       </p>
     </div>
 
-    <p class="green">Use ↑ and ↓ to navigate. Press Enter to start, or click a mission to launch it.</p>
+    <p class="green">Use ↑ and ↓ to navigate. Press Enter to start or tap on a mission to launch it.</p>
     <button class="leaderboard-btn" @click="goToLeaderboard">View Leaderboard</button>
     <button class="logout-btn" @click="logout">Log Out</button>
   </div>
@@ -87,7 +88,7 @@
           }
         },
         navigateToMission(index) {
-          this.selectedMission = index; // Visually highlight the selected mission
+          this.selectedMission = index; 
           const missionUrl = this.missions[index].url + "?agent=" + encodeURIComponent(this.agentName);
           window.location.replace(missionUrl);
         },
