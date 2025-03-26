@@ -78,8 +78,12 @@
           } else if (event.key === "ArrowDown") {
             this.selectedMission = (this.selectedMission + 1) % this.missions.length;
           } else if (event.key === "Enter") {
-            location.replace(this.missions[this.selectedMission].url + "?agent=" + encodeURIComponent(this.agentName));
+            this.navigateToMission(this.selectedMission);
           }
+        },
+        navigateToMission(index) {
+          const missionUrl = this.missions[index].url + "?agent=" + encodeURIComponent(this.agentName);
+          window.location.replace(missionUrl);
         },
         getAgentName() {
           let name = new URLSearchParams(window.location.search).get("agent") || sessionStorage.getItem("agentName");
